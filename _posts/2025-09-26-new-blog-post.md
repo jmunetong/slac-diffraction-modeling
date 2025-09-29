@@ -293,13 +293,29 @@ $$\bar{\alpha}_t = \frac{f(t)}{f(0)}, \quad f(t) = \cos\left(\frac{t/T + s}{1 + 
 To generate new diffraction patterns, we reverse the diffusion process:
 
 **DDPM Sampling:**
-```
-1. Start with pure noise: x_T ~ N(0, I)
-2. For t = T, T-1, ..., 1:
-   a. Predict noise: ε_θ(x_t, t)
-   b. Compute mean: μ_θ(x_t, t)
-   c. Sample: x_{t-1} ~ N(μ_θ(x_t, t), β_t I)
-3. Return x_0 (generated diffraction pattern)
+```python
+# Pseudo-code for DDPM sampling process
+def ddpm_sample(model, shape, timesteps=1000):
+    # 1. Start with pure noise: x_T ~ N(0, I)
+    x_t = torch.randn(shape)
+
+    # 2. For t = T, T-1, ..., 1:
+    for t in reversed(range(timesteps)):
+        # a. Predict noise: ε_θ(x_t, t)
+        predicted_noise = model(x_t, t)
+
+        # b. Compute mean: μ_θ(x_t, t)
+        mu_theta = compute_mean(x_t, predicted_noise, t)
+
+        # c. Sample: x_{t-1} ~ N(μ_θ(x_t, t), β_t I)
+        if t > 0:
+            noise = torch.randn_like(x_t)
+            x_t = mu_theta + torch.sqrt(beta_t) * noise
+        else:
+            x_t = mu_theta
+
+    # 3. Return x_0 (generated diffraction pattern)
+    return x_t
 ```
 
 **Faster Sampling (DDIM):**
@@ -409,7 +425,7 @@ for diffraction_pattern in dataloader:
 
 ## Project Structure
 
-```
+```bash
 autoregression/
 ├── configs/                     # Hydra configuration hierarchy
 │   ├── config.yaml             # Main configuration file
@@ -559,18 +575,18 @@ For a model with parameters $\theta$ trained across $N$ GPUs, each processing a 
 
 All-reduce is efficiently implemented using a ring-based or tree-based approach:
 
-```
-Ring All-Reduce Example (4 GPUs):
-Initial: GPU0=[g0], GPU1=[g1], GPU2=[g2], GPU3=[g3]
+```bash
+# Ring All-Reduce Example (4 GPUs):
+# Initial: GPU0=[g0], GPU1=[g1], GPU2=[g2], GPU3=[g3]
 
-Step 1 - Reduce-Scatter:
-GPU0 sends g0 to GPU1, receives g3 from GPU3
-GPU1 sends g1 to GPU2, receives g0 from GPU0
-... (ring communication)
+# Step 1 - Reduce-Scatter:
+# GPU0 sends g0 to GPU1, receives g3 from GPU3
+# GPU1 sends g1 to GPU2, receives g0 from GPU0
+# ... (ring communication)
 
-Step 2 - All-Gather:
-Each GPU has partial sums, now broadcast complete average
-Final: All GPUs have [ḡ0, ḡ1, ḡ2, ḡ3] where ḡi = (gi_0 + gi_1 + gi_2 + gi_3)/4
+# Step 2 - All-Gather:
+# Each GPU has partial sums, now broadcast complete average
+# Final: All GPUs have [ḡ0, ḡ1, ḡ2, ḡ3] where ḡi = (gi_0 + gi_1 + gi_2 + gi_3)/4
 ```
 
 **Communication Complexity:**
@@ -764,17 +780,17 @@ def analyze_communication_cost(model_type, num_params, num_gpus):
 
 **Bandwidth Requirements and Network Topology:**
 
-```
-Single Node (8 GPUs):
-├── GPU-GPU: NVLink/Infinity Fabric (600+ GB/s aggregate)
-├── All-reduce pattern: Direct GPU-to-GPU communication
-└── Optimal for: High-frequency parameter updates, small models
+```bash
+# Single Node (8 GPUs):
+# ├── GPU-GPU: NVLink/Infinity Fabric (600+ GB/s aggregate)
+# ├── All-reduce pattern: Direct GPU-to-GPU communication
+# └── Optimal for: High-frequency parameter updates, small models
 
-Multi-Node (80 GPUs across 10 nodes):
-├── Intra-node: GPU-GPU via NVLink (600+ GB/s per node)
-├── Inter-node: InfiniBand network (25 GB/s per node)  
-├── All-reduce pattern: Hierarchical (intra-node + inter-node)
-└── Optimal for: Large batch training, massive models
+# Multi-Node (80 GPUs across 10 nodes):
+# ├── Intra-node: GPU-GPU via NVLink (600+ GB/s per node)
+# ├── Inter-node: InfiniBand network (25 GB/s per node)
+# ├── All-reduce pattern: Hierarchical (intra-node + inter-node)
+# └── Optimal for: Large batch training, massive models
 ```
 
 #### Fault Tolerance and Checkpointing
@@ -1226,7 +1242,7 @@ python run_hydra_experiment.py \
 
 Hydra automatically organizes outputs based on configuration choices:
 
-```
+```bash
 output/
 ├── vae_kl/                    # Model type
 │   └── 2024-01-15/           # Date
