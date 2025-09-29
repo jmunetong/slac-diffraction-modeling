@@ -43,3 +43,57 @@ hr {
   font-size: 2.5em;
   opacity: 0.3;
 }
+
+/* MathJax styling */
+.MathJax {
+  font-size: 1.1em !important;
+}
+
+.MathJax_Display {
+  text-align: center !important;
+  margin: 1em 0 !important;
+}
+
+/* Ensure tables don't interfere with MathJax */
+table .MathJax {
+  font-size: 1em !important;
+}
+
+/* Code highlighting improvements */
+.highlight {
+  background-color: #f8f8f8;
+  border: 1px solid #e5e5e5;
+  border-radius: 3px;
+  padding: 9.5px;
+  margin-bottom: 20px;
+}
+
+.highlight pre {
+  margin: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+/* Alert box styling */
+.alert {
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+
+.alert-info {
+  color: #31708f;
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+}
+
+/* Ensure LaTeX in tables renders properly */
+td, th {
+  vertical-align: top;
+}
+
+.tex2jax_process {
+  /* Ensure MathJax processes content in this class */
+}

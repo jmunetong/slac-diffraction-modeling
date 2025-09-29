@@ -36,24 +36,42 @@ A Variational Autoencoder learns to encode X-ray diffraction patterns $\mathbf{x
 
 **The VAE Objective Function:**
 
-The VAE optimizes the Evidence Lower BOund (ELBO):
+The VAE optimizes the Evidence Lower Bound (ELBO):
 
 $$\mathcal{L}_{\text{VAE}} = \mathbb{E}_{q_{\phi}(\mathbf{z}|\mathbf{x})}[\log p_{\theta}(\mathbf{x}|\mathbf{z})] - \beta \cdot D_{KL}(q_{\phi}(\mathbf{z}|\mathbf{x}) \| p(\mathbf{z}))$$
 
-Where:
-- **Reconstruction Term**: $\mathbb{E}_{q_{\phi}(\mathbf{z}|\mathbf{x})}[\log p_{\theta}(\mathbf{x}|\mathbf{z})]$ ensures decoded patterns match input diffraction data
-- **Regularization Term**: $D_{KL}(q_{\phi}(\mathbf{z}|\mathbf{x}) \| p(\mathbf{z}))$ keeps latent distributions close to a prior $p(\mathbf{z}) = \mathcal{N}(0, I)$
-- **β**: Weighting factor controlling reconstruction vs. regularization trade-off
+This objective function consists of three main components:
+
+1) The **reconstruction term** measures how well the model can reconstruct the original diffraction pattern:
+
+   $$\mathbb{E}_{q_{\phi}(\mathbf{z}|\mathbf{x})}[\log p_{\theta}(\mathbf{x}|\mathbf{z})]$$
+
+   This ensures decoded patterns match input diffraction data.
+
+2) The **regularization term** keeps latent distributions well-behaved:
+
+   $$D_{KL}(q_{\phi}(\mathbf{z}|\mathbf{x}) \| p(\mathbf{z}))$$
+
+   This keeps latent distributions close to a prior $p(\mathbf{z}) = \mathcal{N}(0, I)$.
+
+3) The **weighting factor** $\beta$ controls the reconstruction vs. regularization trade-off.
 
 #### VAE Components for X-ray Diffraction
 
 **1. Encoder Network (Recognition Model):**
+
 $$q_{\phi}(\mathbf{z}|\mathbf{x}) = \mathcal{N}(\boldsymbol{\mu}_{\phi}(\mathbf{x}), \boldsymbol{\sigma}^2_{\phi}(\mathbf{x})I)$$
 
-- Maps diffraction pattern $\mathbf{x}$ to latent parameters $\boldsymbol{\mu}_{\phi}(\mathbf{x})$ and $\boldsymbol{\sigma}_{\phi}(\mathbf{x})$
-- $\mathbf{x}$: Input diffraction pattern (e.g., 512×512 intensity map)
-- $\boldsymbol{\mu}_{\phi}(\mathbf{x})$: Mean of latent distribution (learned function of input)
-- $\boldsymbol{\sigma}_{\phi}(\mathbf{x})$: Standard deviation of latent distribution
+The encoder maps diffraction patterns to latent parameters:
+
+**Input:**
+$$\mathbf{x} \text{ : Input diffraction pattern (e.g., 512×512 intensity map)}$$
+
+**Latent Mean:**
+$$\boldsymbol{\mu}_{\phi}(\mathbf{x}) \text{ : Mean of latent distribution (learned function of input)}$$
+
+**Latent Standard Deviation:**
+$$\boldsymbol{\sigma}_{\phi}(\mathbf{x}) \text{ : Standard deviation of latent distribution}$$
 
 **2. Reparameterization Trick:**
 $$\mathbf{z} = \boldsymbol{\mu}_{\phi}(\mathbf{x}) + \boldsymbol{\sigma}_{\phi}(\mathbf{x}) \odot \boldsymbol{\epsilon}, \quad \text{where } \boldsymbol{\epsilon} \sim \mathcal{N}(0, I)$$
@@ -101,7 +119,15 @@ $$\mathcal{L}_{\beta\text{-VAE}} = \mathcal{L}_{\text{recon}} + \beta \cdot D_{K
 
 #### KL Divergence Computation
 
-For the Gaussian encoder $q_{\phi}(\mathbf{z}|\mathbf{x}) = \mathcal{N}(\boldsymbol{\mu}, \boldsymbol{\sigma}^2 I)$ and prior $p(\mathbf{z}) = \mathcal{N}(0, I)$:
+For the Gaussian encoder and prior distributions:
+
+- **Encoder distribution:**  
+  $$q_{\phi}(\mathbf{z}|\mathbf{x}) = \mathcal{N}(\boldsymbol{\mu}, \boldsymbol{\sigma}^2 I)$$  
+
+- **Prior distribution:**  
+  $$p(\mathbf{z}) = \mathcal{N}(0, I)$$
+
+The KL divergence between these distributions is:
 
 $$D_{KL}(q_{\phi}(\mathbf{z}|\mathbf{x}) \| p(\mathbf{z})) = \frac{1}{2} \sum_j [\mu_j^2 + \sigma_j^2 - \log(\sigma_j^2) - 1]$$
 
@@ -133,7 +159,15 @@ $$\mathbf{z}_e = \text{Encoder}_{\phi}(\mathbf{x}) \in \mathbb{R}^{H \times W \t
 
 **2. Vector Quantization:**
 $$\mathbf{z}_q(i,j) = \arg\min_k \|\mathbf{z}_e(i,j) - \mathbf{e}_k\|_2$$
-- **$\mathbf{E} = \{\mathbf{e}_k\}_{k=1}^K$**: Learned codebook with K vectors
+
+The vector quantization process works as follows:
+
+**Learned Codebook Definition:**
+$$\mathbf{E} = \{\mathbf{e}_{k}\}_{k=1}^{K}$$
+
+This is the learned codebook containing K vectors.
+
+**Assignment Process:**
 - Each spatial location $(i,j)$ gets assigned to nearest codebook vector
 - **$\mathbf{z}_q$**: Quantized representation (discrete)
 
@@ -230,10 +264,16 @@ Using the reparameterization trick, we can sample any intermediate state directl
 
 $$\mathbf{x}_t = \sqrt{\bar{\alpha}_t}\mathbf{x}_0 + \sqrt{1-\bar{\alpha}_t}\boldsymbol{\epsilon}$$
 
-Where:
-- **$\alpha_t = 1 - \beta_t$**
-- **$\bar{\alpha}_t = \prod_{s=1}^t \alpha_s$** (cumulative product)
-- **$\boldsymbol{\epsilon} \sim \mathcal{N}(0, \mathbf{I})$**: Random noise
+Where the parameters are defined as:
+
+**Alpha parameter:**
+$$\alpha_{t} = 1 - \beta_{t}$$
+
+**Cumulative alpha (product of all previous alphas):**
+$$\bar{\alpha}_{t} = \prod_{s=1}^{t} \alpha_{s}$$
+
+**Random noise:**
+$$\boldsymbol{\epsilon} \sim \mathcal{N}(0, \mathbf{I})$$
 
 This allows efficient training without simulating the entire forward chain.
 
