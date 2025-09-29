@@ -1,3 +1,10 @@
+---
+layout: post
+title: "Scaling X-ray Diffraction Modeling with Accelerate, Hydra, and SLURM: A Complete Guide to Multi-GPU VAE, VQ, and Diffusion Models"
+date: 2025-09-26
+mathjax: true
+---
+
 # Scaling X-ray Diffraction Modeling with Accelerate, Hydra, and SLURM: A Complete Guide to Multi-GPU VAE, VQ, and Diffusion Models
 
 Large-scale X-ray diffraction data modeling requires sophisticated computational infrastructure to train complex neural networks like VAEs, VQ-VAEs, and diffusion models. In this comprehensive guide, we'll demonstrate how to leverage three powerful tools—Accelerate, Hydra, and SLURM—to seamlessly scale your X-ray diffraction experiments across multiple GPUs and compute nodes.
